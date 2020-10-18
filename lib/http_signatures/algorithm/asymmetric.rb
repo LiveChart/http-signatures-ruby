@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "openssl"
+
 module HttpSignatures
   module Algorithm
     module Asymmetric
