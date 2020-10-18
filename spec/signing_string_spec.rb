@@ -22,9 +22,7 @@ RSpec.describe HttpSignatures::SigningString do
 
   let(:message) do
     HttpSignatures::Message.from(
-      Net::HTTP::Get.new("/path?query=123", "date" => DATE, "x-herring" => "red"),
-      created: created,
-      expires: expires
+      Net::HTTP::Get.new("/path?query=123", "date" => DATE, "x-herring" => "red")
     )
   end
 

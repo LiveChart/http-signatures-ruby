@@ -16,7 +16,7 @@ RSpec.describe HttpSignatures::Verifier do
   subject(:verifier) { HttpSignatures::Verifier.new(key_store: key_store) }
   let(:key_store) { HttpSignatures::KeyStore.new("pda" => "secret") }
   let(:http_message) { Net::HTTP::Get.new("/path?query=123", headers) }
-  let(:message) { HttpSignatures::Message.from(http_message, created: created, expires: expires) }
+  let(:message) { HttpSignatures::Message.from(http_message) }
   let(:headers) { { "Date" => DATE, "Signature" => signature_header } }
 
   let(:signature_header) do

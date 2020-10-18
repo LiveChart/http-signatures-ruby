@@ -40,7 +40,7 @@ module HttpSignatures
     end
 
     class << self
-      def from(raw, created: nil, expires: nil)
+      def from(raw)
         case raw
         when Net::HTTPGenericRequest
           # Canonicalization of duplicate headers: https://tools.ietf.org/html/draft-ietf-httpbis-message-signatures-00#section-2.1.1
