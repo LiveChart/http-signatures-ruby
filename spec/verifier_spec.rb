@@ -13,8 +13,18 @@ RSpec.describe HttpSignatures::Verifier do
   let(:created) { nil }
   let(:expires) { nil }
 
+  let(:public_key) { OpenSSL::PKey::RSA.new(File.read(File.join(__dir__, "keys", "id_rsa.pub"))) }
+  let(:private_key) { OpenSSL::PKey::RSA.new(File.read(File.join(__dir__, "keys", "id_rsa"))) }
+
   subject(:verifier) { HttpSignatures::Verifier.new(key_store: key_store) }
-  let(:key_store) { HttpSignatures::KeyStore.new("pda" => "secret") }
+  let(:key_store) do
+    HttpSignatures::KeyStore.new({
+      "pda" => {
+        private_key: private_key,
+        public_key: public_key,
+      }
+    })
+  end
   let(:http_message) { Net::HTTP::Get.new("/path?query=123", headers) }
   let(:message) { HttpSignatures::Message.from(http_message) }
   let(:headers) { { "Date" => DATE, "Signature" => signature_header } }
@@ -22,11 +32,22 @@ RSpec.describe HttpSignatures::Verifier do
   let(:signature_header) do
     'keyId="%s",algorithm="%s",headers="%s",signature="%s"' % [
       "pda",
-      "hmac-sha256",
+      "hs2019",
       "(request-target) date",
-      "Co4yhhwmZM+GILYIjxaEsecm6UadTfahtxohaguAnbg=",
+      "I9q+MqAUhjPqJSvSjWpxEx3wftzyycqXoeGLeVUSeMr1bLJlnpFA007HH/7UjnoZr/Ufex1rw6JQf4FA5k8wXTFa7qJfG26Tguj1grMqrXFgjjJOcE3llhoJSBMyXTU7PjDOZ13c9b9Y7U1jJIkGOACEFLOQktCQt3HtTtcXgtQ=",
     ]
   end
+
+  # Generate a signature
+  # it do
+  #   HttpSignatures::Context.new(
+  #     key_store: key_store,
+  #     signing_key_id: "pda",
+  #     algorithm: "hs2019",
+  #     headers: %w[(request-target) date]
+  #   ).signer.sign(http_message, expires: expires, created: created)
+  #   puts http_message["Signature"]
+  # end
 
   it "verifies a valid message" do
     expect(verifier.valid?(message)).to eq(true)
@@ -65,9 +86,9 @@ RSpec.describe HttpSignatures::Verifier do
     let(:signature_header) do
       'keyId="%s",algorithm="%s",headers="%s",signature="%s",expires=%s' % [
         "pda",
-        "hmac-sha256",
+        "hs2019",
         "(request-target) (expires)",
-        "5NJ0tf0nLKIButgu5ghdpyZqRBiOhjQIlb+wxXeH7D4=",
+        "FlOGGPAfuUfDZ44ApquserAFVa9fXNymH78MWbNMwvbggn4Z+FXs5FElXI2M0fqFj98UwdGMaQp9toKFKMbtWGWn0URf/3akMP3Ih0cgKIRQZEvOudgQhEgRglaXUI2wA3eArJYJq+KF4Cb+Asbmqsk8pC5Zo0NyiBEvH1Y1FeM=",
         expires
       ]
     end
@@ -109,9 +130,9 @@ RSpec.describe HttpSignatures::Verifier do
       let(:signature_header) do
         'keyId="%s",algorithm="%s",headers="%s",signature="%s",created=%s,expires=%s' % [
           "pda",
-          "hmac-sha256",
+          "hs2019",
           "(request-target) (created)",
-          "JCWhS+6Xf1eqkaAYNPcLA4A0bZrKYTWZOP/SbNMzb0g=",
+          "EpLw3xdjllE/k2KLM+ZTfrG6eLW1I1S8TMoU5KejWvCXyOKVxJbaEUBgD7rnuana9xTK/+UMeCXRthOegCqFuLNsRoMXgxqgZr9naeYzdhdN3b+Y8eFxNfNHAAUsAFpO2cbxKLqaVrDueZByXzXkQc5xhGuU+udlEj7w1ZPCfTs=",
           created,
           expires
         ]

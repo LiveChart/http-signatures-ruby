@@ -12,11 +12,11 @@ module HttpSignatures
         provided_signature_base64:,
         signing_string:
       )
-        @algorithm.verify(
-          key.secret,
-          Base64.strict_decode64(provided_signature_base64),
-          signing_string.to_str
-        )
+        decoded_signature = Base64.strict_decode64(provided_signature_base64) rescue nil
+
+        return false if decoded_signature.nil?
+
+        @algorithm.verify(key.secret, decoded_signature, signing_string.to_str)
       end
     end
   end

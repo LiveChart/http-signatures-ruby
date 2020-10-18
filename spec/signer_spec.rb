@@ -6,11 +6,14 @@ RSpec.describe HttpSignatures::Signer do
 
   EXAMPLE_DATE = "Mon, 28 Jul 2014 15:39:13 -0700"
 
+  let(:public_key) { OpenSSL::PKey::RSA.new(File.read(File.join(__dir__, "keys", "id_rsa.pub"))) }
+  let(:private_key) { OpenSSL::PKey::RSA.new(File.read(File.join(__dir__, "keys", "id_rsa"))) }
+
   subject(:signer) do
     HttpSignatures::Signer.new(key: key, algorithm: algorithm, covered_content: covered_content)
   end
-  let(:key) { HttpSignatures::Key.new(id: "pda", secret: "sh") }
-  let(:algorithm) { HttpSignatures::Algorithm::Hmac.new("sha256") }
+  let(:key) { HttpSignatures::Key.new(id: "pda", secret: { public_key: public_key, private_key: private_key } ) }
+  let(:algorithm) { HttpSignatures::Algorithm::Hs2019.new }
   let(:covered_content) { HttpSignatures::CoveredContent.new(["date", "content-type"]) }
 
   let(:http_message) do
@@ -38,7 +41,7 @@ RSpec.describe HttpSignatures::Signer do
   describe "#signature_string" do
     it "passes correct signing string to algorithm" do
       expect(algorithm).to receive(:sign).with(
-        "sh",
+        key.secret,
         ["date: #{EXAMPLE_DATE}", "content-type: text/plain"].join("\n")
       ).at_least(:once).and_return("static")
       signer.signature_string(message)
@@ -52,7 +55,7 @@ RSpec.describe HttpSignatures::Signer do
   describe "#sign" do
     it "passes correct signing string to algorithm" do
       expect(algorithm).to receive(:sign).with(
-        "sh",
+        key.secret,
         ["date: #{EXAMPLE_DATE}", "content-type: text/plain"].join("\n")
       ).at_least(:once).and_return("static")
       signer.sign(http_message)
@@ -64,17 +67,19 @@ RSpec.describe HttpSignatures::Signer do
   end
 
   context "after signing" do
-    before { signer.sign(http_message) }
+    before do
+      allow_any_instance_of(HttpSignatures::SignatureParameters).to receive(:signature_base64).and_return("b64sig")
+      signer.sign(http_message)
+    end
 
     it "has valid Signature header structure" do
       expect(http_message["Signature"]).to match(signature_structure_pattern)
     end
 
     it "matches expected Signature header" do
-      expect(http_message["Signature"]).to eq(
-        'keyId="pda",algorithm="hmac-sha256",' +
-          'headers="date content-type",signature="0ZoJq6cxYZRXe+TN85whSuQgJsam1tRyIal7ni+RMXA="'
-      )
+      expect(http_message["Signature"]).to eq <<~TEXT.chomp
+        keyId="pda",algorithm="hs2019",headers="date content-type",signature="b64sig"
+      TEXT
     end
   end
 end

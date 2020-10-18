@@ -43,6 +43,8 @@ RSpec.describe "Using RSA" do
 
   let(:message) { HttpSignatures::Message.from(http_message) }
 
+  let(:algorithm) { "hs2019" }
+
   let(:context) do
     HttpSignatures::Context.new(
       key_store: {
@@ -58,68 +60,16 @@ RSpec.describe "Using RSA" do
   end
 
   describe "context.signer.sign and context.verifier.valid?" do
-    context "algorithm is hs2019" do
-      let(:algorithm) { "hs2019" }
-
-      context "headers are %w{date}" do
-        let(:headers) { %w{date} }
-        it_behaves_like "signer"
-        it_behaves_like "verifier"
-      end
-
-      context "headers are %w{(request-target) host date}" do
-        let(:headers) { %w{(request-target) host date} }
-        it_behaves_like "signer"
-        it_behaves_like "verifier"
-      end
+    context "headers are %w{date}" do
+      let(:headers) { %w{date} }
+      it_behaves_like "signer"
+      it_behaves_like "verifier"
     end
 
-    context "algorithm is sha256" do
-      let(:algorithm) { "rsa-sha256" }
-
-      context "headers are %w{date}" do
-        let(:headers) { %w{date} }
-        it_behaves_like "signer"
-        it_behaves_like "verifier"
-      end
-
-      context "headers are %w{(request-target) host date}" do
-        let(:headers) { %w{(request-target) host date} }
-        it_behaves_like "signer"
-        it_behaves_like "verifier"
-      end
-    end
-
-    context "algorithm is sha384" do
-      let(:algorithm) { "rsa-sha384" }
-
-      context "headers are %w{date}" do
-        let(:headers) { %w{date} }
-        it_behaves_like "signer"
-        it_behaves_like "verifier"
-      end
-
-      context "headers are %w{(request-target) host date}" do
-        let(:headers) { %w{(request-target) host date} }
-        it_behaves_like "signer"
-        it_behaves_like "verifier"
-      end
-    end
-
-    context "algorithm is sha512" do
-      let(:algorithm) { "rsa-sha512" }
-
-      context "headers are %w{date}" do
-        let(:headers) { %w{date} }
-        it_behaves_like "signer"
-        it_behaves_like "verifier"
-      end
-
-      context "headers are %w{(request-target) host date}" do
-        let(:headers) { %w{(request-target) host date} }
-        it_behaves_like "signer"
-        it_behaves_like "verifier"
-      end
+    context "headers are %w{(request-target) host date}" do
+      let(:headers) { %w{(request-target) host date} }
+      it_behaves_like "signer"
+      it_behaves_like "verifier"
     end
   end
 end
