@@ -2,23 +2,23 @@
 # https://github.com/tomitribe/http-signatures-java/blob/master/src/test/java/org/tomitribe/auth/signatures/RsaTest.java
 
 RSpec.shared_examples_for "signer" do |expected_signature|
-  let(:provided_signature) { HttpSignatures::SignatureParametersParser.new(message["signature"]).parse.fetch("signature") }
+  let(:provided_signature) { HttpSignatures::SignatureParameters.parse(http_message["Signature"]).signature_base64 }
   it "returns expected signature" do
-    context.signer.sign message
+    context.signer.sign(http_message)
     expect(provided_signature).to eq(expected_signature)
   end
 end
 
 RSpec.shared_examples_for "verifier" do
   it "validates signature" do
-    context.signer.sign message
-    expect(context.verifier.valid? message).to eq(true)
+    context.signer.sign(http_message)
+    expect(context.verifier.valid?(HttpSignatures::Message.from(http_message))).to eq(true)
   end
 
   it "rejects if a signed header has changed" do
-    context.signer.sign message
-    message["Date"] = "Thu, 12 Jan 2012 21:31:40 GMT"
-    expect(context.verifier.valid? message).to eq(false)
+    context.signer.sign(http_message)
+    http_message["Date"] = "Thu, 12 Jan 2012 21:31:40 GMT"
+    expect(context.verifier.valid?(HttpSignatures::Message.from(http_message))).to eq(false)
   end
 end
 
@@ -26,7 +26,7 @@ RSpec.describe "Using RSA" do
   let(:public_key) { File.read(File.join(__dir__, "keys", "id_rsa.pub")) }
   let(:private_key) { File.read(File.join(__dir__, "keys", "id_rsa")) }
 
-  let(:message) do
+  let(:http_message) do
     Net::HTTP::Post.new(
       "/foo?param=value&pet=dog",
       "Host" => "example.org",
@@ -38,9 +38,11 @@ RSpec.describe "Using RSA" do
     )
   end
 
+  let(:message) { HttpSignatures::Message.from(http_message) }
+
   let(:context) do
     HttpSignatures::Context.new(
-      keys: {
+      key_store: {
         "my_rsa_key_pair" => {
           private_key: private_key,
           public_key: public_key,

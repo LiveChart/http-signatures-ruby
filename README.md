@@ -19,7 +19,7 @@ this is best placed in an initializer.
 require "http_signatures"
 
 $context = HttpSignatures::Context.new(
-  keys: {"examplekey" => "secret-key-here"},
+  key_store: {"examplekey" => "secret-key-here"},
   algorithm: "hmac-sha256",
   headers: ["(request-target)", "Date", "Content-Length"],
 )
@@ -57,9 +57,6 @@ Now `message` contains the signature headers:
 ```rb
 message["Signature"]
 # keyId="examplekey",algorithm="hmac-sha256",headers="...",signature="..."
-
-message["Authorization"]
-# Signature keyId="examplekey",algorithm="hmac-sha256",headers="...",signature="..."
 ```
 
 ### Verifying a signed message

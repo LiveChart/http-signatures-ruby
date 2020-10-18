@@ -1,6 +1,5 @@
 module HttpSignatures
   class KeyStore
-
     def initialize(key_hash)
       @keys = {}
       key_hash.each { |id, secret| self[id] = secret }
@@ -23,6 +22,5 @@ module HttpSignatures
     def []=(id, secret)
       @keys[id] = Key.new(id: id, secret: secret)
     end
-
   end
 end

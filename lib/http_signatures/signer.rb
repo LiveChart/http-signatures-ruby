@@ -1,40 +1,61 @@
 module HttpSignatures
   class Signer
-
-    AUTHORIZATION_SCHEME = "Signature"
-
-    def initialize(key:, algorithm:, header_list:)
+    def initialize(key:, algorithm:, covered_content:)
       @key = key
       @algorithm = algorithm
-      @header_list = header_list
+      @covered_content = covered_content
     end
 
-    def sign(message)
-      message.tap do |m|
-        m["Signature"] = [signature_parameters(message).to_str]
-        m["Authorization"] = [AUTHORIZATION_SCHEME + " " + signature_parameters(message).to_str]
-      end
+    def signature_string(message, created: nil, expires: nil)
+      signature_parameters(message, created, expires).to_str
+    end
+
+    def sign(request, **kwargs)
+      message = Message.from(request)
+
+      headers_target =
+        case request
+        when Net::HTTPGenericRequest
+          request
+        when defined?(ActionDispatch) && ActionDispatch::Request
+          request.headers
+        else
+          raise ArgumentError, "Cannot sign #{raw.class}"
+        end
+
+      headers_target[Headers::SIGNATURE] = signature_string(message, **kwargs)
+
+      request
     end
 
     private
 
-    def signature_parameters(message)
+    def signature_parameters(message, created, expires)
       SignatureParameters.new(
-        key: @key,
-        algorithm: @algorithm,
-        header_list: @header_list,
-        signature: signature(message),
+        key_id: @key.id,
+        algorithm: @algorithm.name,
+        covered_content: @covered_content.to_str,
+        signature_base64: signature(message, created, expires).to_base64,
+        created: created,
+        expires: expires
       )
     end
 
-    def signature(message)
+    def signature(message, created, expires)
       Signature.new(
-        message: message,
         key: @key,
         algorithm: @algorithm,
-        header_list: @header_list,
+        signing_string: signing_string(message, created, expires)
       )
     end
 
+    def signing_string(message, created, expires)
+      SigningString.new(
+        covered_content: @covered_content,
+        message: message,
+        created: created,
+        expires: expires
+      )
+    end
   end
 end

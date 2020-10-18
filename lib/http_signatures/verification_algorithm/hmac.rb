@@ -5,21 +5,16 @@ module HttpSignatures
         @algorithm = algorithm
       end
 
-      def valid?(message:, key:, header_list:, provided_signature_base64:)
-        expected_signature_base64(message, key, header_list) == provided_signature_base64
-      end
-
-      def expected_signature_base64(message, key, header_list)
-        Base64.strict_encode64(expected_signature_raw(message, key, header_list))
-      end
-
-      def expected_signature_raw(message, key, header_list)
+      def valid?(
+        key:,
+        provided_signature_base64:,
+        signing_string:
+      )
         Signature.new(
-          message: message,
           key: key,
           algorithm: @algorithm,
-          header_list: header_list,
-        ).to_str
+          signing_string: signing_string
+        ).to_base64 == provided_signature_base64
       end
     end
   end

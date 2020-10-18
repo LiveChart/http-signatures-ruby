@@ -1,8 +1,16 @@
 module HttpSignatures
   class Context
+    def initialize(key_store:, signing_key_id: nil, algorithm: nil, headers: nil)
+      @key_store =
+        case key_store
+        when KeyStore
+          key_store
+        when Hash
+          KeyStore.new(key_store)
+        else
+          raise ArgumentError, "Must be provided a KeyStore or Hash"
+        end
 
-    def initialize(keys: {}, signing_key_id: nil, algorithm: nil, headers: nil)
-      @key_store = KeyStore.new(keys)
       @signing_key_id = signing_key_id
       @algorithm_name = algorithm
       @headers = headers
@@ -12,7 +20,7 @@ module HttpSignatures
       Signer.new(
         key: signing_key,
         algorithm: Algorithm.create(@algorithm_name),
-        header_list: HeaderList.new(@headers),
+        covered_content: CoveredContent.new(@headers),
       )
     end
 
@@ -29,6 +37,5 @@ module HttpSignatures
         @key_store.only_key
       end
     end
-
   end
 end

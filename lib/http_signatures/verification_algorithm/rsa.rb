@@ -7,14 +7,15 @@ module HttpSignatures
         @algorithm = algorithm
       end
 
-      def valid?(message:, key:, header_list:, provided_signature_base64:)
+      def valid?(
+        key:,
+        provided_signature_base64:,
+        signing_string:
+      )
         @algorithm.verify(
           key.secret,
           Base64.strict_decode64(provided_signature_base64),
-          SigningString.new(
-            header_list: header_list,
-            message: message,
-          ).to_str
+          signing_string.to_str
         )
       end
     end

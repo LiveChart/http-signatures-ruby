@@ -1,15 +1,14 @@
 module HttpSignatures
   module Algorithm
-
     def self.create(name)
       case name
-      when "hmac-sha1" then Hmac.new("sha1")
-      when "hmac-sha256" then Hmac.new("sha256")
-      when "rsa-sha1" then Rsa.new("sha1")
-      when "rsa-sha256" then Rsa.new("sha256")
-      when "rsa-sha384" then Rsa.new("sha384")
-      when "rsa-sha512" then Rsa.new("sha512")
-      else raise UnknownAlgorithm.new(name)
+        when Hmac::SHA1 then Hmac.new(DigestName::SHA1)
+        when Hmac::SHA256 then Hmac.new(DigestName::SHA256)
+        when Rsa::SHA1 then Rsa.new(DigestName::SHA1)
+        when Rsa::SHA256 then Rsa.new(DigestName::SHA256)
+        when Rsa::SHA384 then Rsa.new(DigestName::SHA384)
+        when Rsa::SHA512 then Rsa.new(DigestName::SHA512)
+        else raise UnknownAlgorithm.new(name)
       end
     end
 
@@ -18,6 +17,5 @@ module HttpSignatures
         super("Unknown algorithm name '#{name}'")
       end
     end
-
   end
 end

@@ -1,25 +1,17 @@
 module HttpSignatures
   class Signature
-
-    def initialize(message:, key:, algorithm:, header_list:)
-      @message = message
+    def initialize(key:, algorithm:, signing_string:)
       @key = key
       @algorithm = algorithm
-      @header_list = header_list
+      @signing_string = signing_string
     end
 
     def to_str
-      @algorithm.sign(@key.secret, signing_string.to_str)
+      @algorithm.sign(@key.secret, @signing_string.to_str)
     end
 
-    private
-
-    def signing_string
-      SigningString.new(
-        header_list: @header_list,
-        message: @message,
-      )
+    def to_base64
+      Base64.strict_encode64(to_str)
     end
-
   end
 end

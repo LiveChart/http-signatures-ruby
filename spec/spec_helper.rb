@@ -1,4 +1,5 @@
 require "http_signatures"
+require "timecop"
 
 # http://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
 RSpec.configure do |c|
