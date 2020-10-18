@@ -3,11 +3,9 @@
 require "base64"
 
 module HttpSignatures
-  class VerificationAlgorithm
-    class Rsa
-      def initialize(algorithm)
-        @algorithm = algorithm
-      end
+  module VerificationAlgorithm
+    class Rsa < Base
+      self.algorithm_class = Algorithm::Rsa
 
       def valid?(
         key:,

@@ -1,11 +1,9 @@
 # frozen_string_literal: true
 
 module HttpSignatures
-  class VerificationAlgorithm
-    class Hmac
-      def initialize(algorithm)
-        @algorithm = algorithm
-      end
+  module VerificationAlgorithm
+    class Hmac < Base
+      self.algorithm_class = Algorithm::Hmac
 
       def valid?(
         key:,

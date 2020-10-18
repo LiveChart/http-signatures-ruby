@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module HttpSignatures
-  class VerificationAlgorithm
+  module VerificationAlgorithm
     def self.create(algorithm)
       case algorithm
         when HttpSignatures::Algorithm::Hmac then Hmac.new(algorithm)
