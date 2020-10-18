@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module HttpSignatures
   class Verification
     attr_reader :message, :key_store, :max_age

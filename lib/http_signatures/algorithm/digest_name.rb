@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module HttpSignatures
   module Algorithm
     module DigestName

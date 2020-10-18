@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # NOTE: All test data in this spec are same as
 # https://github.com/tomitribe/http-signatures-java/blob/master/src/test/java/org/tomitribe/auth/signatures/RsaTest.java
 

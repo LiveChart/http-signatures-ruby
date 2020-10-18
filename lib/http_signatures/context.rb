@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module HttpSignatures
   class Context
     def initialize(key_store:, signing_key_id: nil, algorithm: nil, headers: nil)

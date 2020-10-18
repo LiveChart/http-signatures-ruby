@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 RSpec.describe HttpSignatures::CoveredContent do
   describe ".from_string" do
     it "loads and normalizes header names" do

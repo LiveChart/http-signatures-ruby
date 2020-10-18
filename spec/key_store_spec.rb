@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 RSpec.describe HttpSignatures::KeyStore do
 
   subject(:store) do

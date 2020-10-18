@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "http_signatures/headers"
 require "http_signatures/algorithm"
 require "http_signatures/algorithm/digest_name"

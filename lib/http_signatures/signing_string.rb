@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module HttpSignatures
   class SigningString
     attr_reader :covered_content, :message, :created, :expires

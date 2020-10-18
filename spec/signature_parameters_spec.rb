@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 RSpec.describe HttpSignatures::SignatureParameters do
   subject(:signature_parameters) do
     HttpSignatures::SignatureParameters.new(

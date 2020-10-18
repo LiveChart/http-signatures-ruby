@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module HttpSignatures
   class KeyStore
     def initialize(key_hash)

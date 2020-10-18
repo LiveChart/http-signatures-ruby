@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module HttpSignatures
   class Signature
     def initialize(key:, algorithm:, signing_string:)
