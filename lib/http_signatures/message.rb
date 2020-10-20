@@ -8,12 +8,11 @@ module HttpSignatures
       end
     end
 
-    attr_reader :path, :headers, :body, :verb
+    attr_reader :path, :headers, :verb
 
-    def initialize(path:, headers:, body:, verb:)
+    def initialize(path:, headers:, verb:)
       @path = path
       @headers = headers
-      @body = body
       @verb = verb.downcase
     end
 
@@ -47,14 +46,12 @@ module HttpSignatures
           new(
             path: raw.path,
             headers: raw.to_hash.transform_values! { |value| value.join(", ") },
-            body: raw.body,
             verb: raw.method
           )
         when defined?(ActionDispatch) && ActionDispatch::Request
           new(
             path: raw.path,
             headers: raw.to_hash,
-            body: raw.body,
             verb: raw.method
           )
         else
