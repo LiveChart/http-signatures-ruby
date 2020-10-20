@@ -33,4 +33,16 @@ RSpec.describe HttpSignatures::CoveredContent do
       expect(list.to_s).to eq("(request-target) date content-type (created) (expires)")
     end
   end
+
+  describe "#include?" do
+    let(:list) { HttpSignatures::CoveredContent.new(["(request-target)", "Date", "Content-Type", "(created)", "(expires)"]) }
+
+    it "ignores the case of the input" do
+      expect(list.include?("dAtE")).to eq(true)
+    end
+
+    it "correctly checks presence" do
+      expect(list.include?("digest")).to eq(false)
+    end
+  end
 end

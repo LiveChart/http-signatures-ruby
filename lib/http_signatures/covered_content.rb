@@ -41,7 +41,10 @@ module HttpSignatures
       @_string ||= @names.join(" ")
     end
 
-    def_delegator :@names, :include?
+    def include?(value)
+      @names.include?(value.downcase)
+    end
+
     def_delegator :@names, :map
 
     private
