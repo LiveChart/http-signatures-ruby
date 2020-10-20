@@ -3,16 +3,17 @@
 require "net/http"
 
 RSpec.describe HttpSignatures::Signer do
-
   EXAMPLE_DATE = "Mon, 28 Jul 2014 15:39:13 -0700"
 
-  let(:public_key) { OpenSSL::PKey::RSA.new(File.read(File.join(__dir__, "keys", "id_rsa.pub"))) }
-  let(:private_key) { OpenSSL::PKey::RSA.new(File.read(File.join(__dir__, "keys", "id_rsa"))) }
+  let(:private_key_value) { OpenSSL::PKey::RSA.new(File.read(File.join(__dir__, "keys", "id_rsa"))) }
+
+  let(:private_key) { HttpSignatures::Key.new(id: "pda", secret: private_key_value) }
+
+  let(:key) { private_key }
 
   subject(:signer) do
-    HttpSignatures::Signer.new(key: key, algorithm: algorithm, covered_content: covered_content)
+    described_class.new(key, algorithm, covered_content)
   end
-  let(:key) { HttpSignatures::Key.new(id: "pda", secret: { public_key: public_key, private_key: private_key } ) }
   let(:algorithm) { HttpSignatures::Algorithm::Hs2019.new }
   let(:covered_content) { HttpSignatures::CoveredContent.new(["date", "content-type"]) }
 
@@ -38,17 +39,17 @@ RSpec.describe HttpSignatures::Signer do
     }x
   end
 
-  describe "#signature_string" do
+  describe "#signature_header" do
     it "passes correct signing string to algorithm" do
       expect(algorithm).to receive(:sign).with(
         key.secret,
         ["date: #{EXAMPLE_DATE}", "content-type: text/plain"].join("\n")
       ).at_least(:once).and_return("static")
-      signer.signature_string(message)
+      signer.signature_header(message)
     end
 
     it "returns a string" do
-      expect(signer.signature_string(message)).to be_a(String)
+      expect(signer.signature_header(message)).to be_a(HttpSignatures::SignatureHeader)
     end
   end
 
@@ -68,7 +69,7 @@ RSpec.describe HttpSignatures::Signer do
 
   context "after signing" do
     before do
-      allow_any_instance_of(HttpSignatures::SignatureParameters).to receive(:signature_base64).and_return("b64sig")
+      allow_any_instance_of(HttpSignatures::SignatureHeader).to receive(:base64_value).and_return("b64sig")
       signer.sign(http_message)
     end
 

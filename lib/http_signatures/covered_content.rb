@@ -6,14 +6,14 @@ module HttpSignatures
   class CoveredContent
     extend ::Forwardable
 
-    class IllegalHeader < StandardError
+    class IllegalHeader < HttpSignatures::Error
       def initialize(names)
         names_string = names.map { |n| "'#{n}'" }.join(", ")
         super("Header #{names_string} not permitted")
       end
     end
 
-    class EmptyCoveredContent < StandardError; end
+    class EmptyCoveredContent < HttpSignatures::Error; end
 
     REQUEST_TARGET = "(request-target)"
 
@@ -37,8 +37,8 @@ module HttpSignatures
       @names.dup
     end
 
-    def to_str
-      @_str ||= @names.join(" ")
+    def to_s
+      @_string ||= @names.join(" ")
     end
 
     def_delegator :@names, :include?
@@ -53,7 +53,7 @@ module HttpSignatures
     end
 
     def illegal_headers_present
-      ILLEGAL & @names
+      @_illegal_headers_present ||= ILLEGAL & @names
     end
   end
 end

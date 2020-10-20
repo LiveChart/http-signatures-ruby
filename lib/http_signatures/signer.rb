@@ -1,15 +1,24 @@
 # frozen_string_literal: true
 
+require "base64"
+
 module HttpSignatures
   class Signer
-    def initialize(key:, algorithm:, covered_content:)
+    def initialize(key, algorithm, covered_content)
       @key = key
       @algorithm = algorithm
       @covered_content = covered_content
     end
 
-    def signature_string(message, created: nil, expires: nil)
-      signature_parameters(message, created, expires).to_str
+    def signature_header(message, created: nil, expires: nil)
+      SignatureHeader.new(
+        key_id: @key.id,
+        algorithm: @algorithm.name,
+        covered_content: @covered_content,
+        base64_value: base64_signature(message, @covered_content, created: created, expires: expires),
+        created: created,
+        expires: expires
+      )
     end
 
     def sign(request, **kwargs)
@@ -25,36 +34,23 @@ module HttpSignatures
           raise ArgumentError, "Cannot sign #{raw.class}"
         end
 
-      headers_target[Headers::SIGNATURE] = signature_string(message, **kwargs)
+      headers_target[Header::SIGNATURE] = signature_header(message, **kwargs).to_s
 
       request
     end
 
     private
 
-    def signature_parameters(message, created, expires)
-      SignatureParameters.new(
-        key_id: @key.id,
-        algorithm: @algorithm.name,
-        covered_content: @covered_content.to_str,
-        signature_base64: signature(message, created, expires).to_base64,
-        created: created,
-        expires: expires
-      )
+    def base64_signature(*args)
+      digest = @algorithm.sign(@key.secret, signature_input(*args).to_s)
+
+      ::Base64.strict_encode64(digest)
     end
 
-    def signature(message, created, expires)
-      Signature.new(
-        key: @key,
-        algorithm: @algorithm,
-        signing_string: signing_string(message, created, expires)
-      )
-    end
-
-    def signing_string(message, created, expires)
-      SigningString.new(
-        covered_content: @covered_content,
-        message: message,
+    def signature_input(message, covered_content, created:, expires:)
+      SignatureInput.new(
+        message,
+        covered_content,
         created: created,
         expires: expires
       )

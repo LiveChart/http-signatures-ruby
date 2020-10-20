@@ -7,21 +7,24 @@ require "net/http"
 
 RSpec.shared_examples_for "signer" do
   it "returns expected signature" do
-    context.signer.sign(http_message)
-    expect(context.verifier.valid?(HttpSignatures::Message.from(http_message))).to eq(true)
+    signer.sign(http_message)
+    signature = HttpSignatures::SignatureHeader.parse(http_message["Signature"])
+    expect(verifier.valid?(public_key, signature, HttpSignatures::Message.from(http_message))).to eq(true)
   end
 end
 
 RSpec.shared_examples_for "verifier" do
   it "validates signature" do
-    context.signer.sign(http_message)
-    expect(context.verifier.valid?(HttpSignatures::Message.from(http_message))).to eq(true)
+    signer.sign(http_message)
+    signature = HttpSignatures::SignatureHeader.parse(http_message["Signature"])
+    expect(verifier.valid?(public_key, signature, HttpSignatures::Message.from(http_message))).to eq(true)
   end
 
   it "rejects if a signed header has changed" do
-    context.signer.sign(http_message)
+    signer.sign(http_message)
     http_message["Date"] = "Thu, 12 Jan 2012 21:31:40 GMT"
-    expect(context.verifier.valid?(HttpSignatures::Message.from(http_message))).to eq(false)
+    signature = HttpSignatures::SignatureHeader.parse(http_message["Signature"])
+    expect(verifier.valid?(public_key, signature, HttpSignatures::Message.from(http_message))).to eq(false)
   end
 end
 
@@ -43,23 +46,21 @@ RSpec.describe "Using RSA" do
 
   let(:message) { HttpSignatures::Message.from(http_message) }
 
-  let(:algorithm) { "hs2019" }
+  let(:algorithm) { HttpSignatures::Algorithm::Hs2019.new }
 
-  let(:context) do
-    HttpSignatures::Context.new(
-      key_store: {
-        "my_rsa_key_pair" => {
-          private_key: private_key,
-          public_key: public_key,
-        },
-      },
-      signing_key_id: "my_rsa_key_pair",
-      algorithm: algorithm,
-      headers: headers,
-    )
-  end
+  let(:headers) { }
 
-  describe "context.signer.sign and context.verifier.valid?" do
+  let(:covered_content) { HttpSignatures::CoveredContent.new(headers) }
+
+  let(:private_key_value) { OpenSSL::PKey::RSA.new(File.read(File.join(__dir__, "keys", "id_rsa"))) }
+  let(:private_key) { HttpSignatures::Key.new(id: "pda", secret: private_key_value) }
+  let(:signer) { HttpSignatures::Signer.new(private_key, algorithm, covered_content) }
+
+  let(:public_key_value) { OpenSSL::PKey::RSA.new(File.read(File.join(__dir__, "keys", "id_rsa.pub"))) }
+  let(:public_key) { HttpSignatures::Key.new(id: "pda", secret: public_key_value) }
+  let(:verifier) { HttpSignatures::Verifier.new }
+
+  describe "signer.sign and verifier.valid?" do
     context "headers are %w{date}" do
       let(:headers) { %w{date} }
       it_behaves_like "signer"

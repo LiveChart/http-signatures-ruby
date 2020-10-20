@@ -27,10 +27,10 @@ RSpec.describe HttpSignatures::CoveredContent do
     end
   end
 
-  describe "#to_str" do
+  describe "#to_s" do
     it "joins normalized header names with spaces" do
       list = HttpSignatures::CoveredContent.new(["(request-target)", "Date", "Content-Type", "(created)", "(expires)"])
-      expect(list.to_str).to eq("(request-target) date content-type (created) (expires)")
+      expect(list.to_s).to eq("(request-target) date content-type (created) (expires)")
     end
   end
 end

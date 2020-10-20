@@ -1,17 +1,17 @@
 # frozen_string_literal: true
 
 module HttpSignatures
-  class SigningString
+  class SignatureInput
     attr_reader :covered_content, :message, :created, :expires
 
-    def initialize(covered_content:, message:, created: nil, expires: nil)
-      @covered_content = covered_content
+    def initialize(message, covered_content, created: nil, expires: nil)
       @message = message
+      @covered_content = covered_content
       @created = created
       @expires = expires
     end
 
-    def to_str
+    def to_s
       covered_content.map { |name| "%s: %s" % [name, covered_content_value(name)] }.join("\n")
     end
 

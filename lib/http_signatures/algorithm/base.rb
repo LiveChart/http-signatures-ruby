@@ -15,6 +15,10 @@ module HttpSignatures
         "#{name_prefix}#{digest_name}"
       end
 
+      def ==(other)
+        name == other.name
+      end
+
       class << self
         protected
 

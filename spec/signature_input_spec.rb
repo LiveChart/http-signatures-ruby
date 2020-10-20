@@ -2,13 +2,13 @@
 
 require "net/http"
 
-RSpec.describe HttpSignatures::SigningString do
+RSpec.describe HttpSignatures::SignatureInput do
   DATE = "Tue, 29 Jul 2014 14:17:02 -0700"
 
   subject(:signing_string) do
-    HttpSignatures::SigningString.new(
-      covered_content: covered_content,
-      message: message,
+    described_class.new(
+      message,
+      covered_content,
       created: created,
       expires: expires
     )
@@ -26,9 +26,9 @@ RSpec.describe HttpSignatures::SigningString do
     )
   end
 
-  describe "#to_str" do
+  describe "#to_s" do
     it "returns correct signing string" do
-      expect(signing_string.to_str).to eq <<~TEXT.chomp
+      expect(signing_string.to_s).to eq <<~TEXT.chomp
         (request-target): get /path?query=123
         date: #{DATE}
       TEXT
@@ -38,7 +38,7 @@ RSpec.describe HttpSignatures::SigningString do
       let(:covered_content) { HttpSignatures::CoveredContent.from_string("nope") }
       it "raises MissingHeaderError" do
         expect {
-          signing_string.to_str
+          signing_string.to_s
         }.to raise_error(HttpSignatures::Message::MissingHeaderError)
       end
     end
@@ -48,7 +48,7 @@ RSpec.describe HttpSignatures::SigningString do
       let(:covered_content_string) { "(request-target) (expires)" }
 
       it "returns correct signing string" do
-        expect(signing_string.to_str).to eq <<~TEXT.chomp
+        expect(signing_string.to_s).to eq <<~TEXT.chomp
           (request-target): get /path?query=123
           (expires): 1414849972
         TEXT
@@ -60,7 +60,7 @@ RSpec.describe HttpSignatures::SigningString do
       let(:covered_content_string) { "(request-target) (created)" }
 
       it "returns correct signing string" do
-        expect(signing_string.to_str).to eq <<~TEXT.chomp
+        expect(signing_string.to_s).to eq <<~TEXT.chomp
           (request-target): get /path?query=123
           (created): 1414849972
         TEXT

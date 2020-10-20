@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module HttpSignatures
-  module Headers
+  module Header
     SIGNATURE = "Signature"
     DATE = "Date"
   end

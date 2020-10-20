@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 module HttpSignatures
-  class SignatureParameters
-    class ParseError < StandardError; end
+  class SignatureHeader
+    class ParseError < HttpSignatures::Error; end
     class DuplicateParameterError < ParseError; end
 
     SIGNATURE = "signature"
@@ -31,7 +31,7 @@ module HttpSignatures
             raise DuplicateParameterError, "Duplicate parameter: #{name}"
           end
 
-          if !SignatureParameters::ALL_PARAMETERS.include?(name)
+          if !ALL_PARAMETERS.include?(name)
             raise ParseError, "Unparseable segment: #{segment}"
           end
 
@@ -61,25 +61,44 @@ module HttpSignatures
           key_id: parts[KEY_ID],
           algorithm: parts[ALGORITHM],
           covered_content: parts[HEADERS],
-          signature_base64: parts[SIGNATURE],
+          base64_value: parts[SIGNATURE],
           created: parts[CREATED],
           expires: parts[EXPIRES]
         )
       end
     end
 
-    attr_reader :key_id, :algorithm, :covered_content, :signature_base64, :expires, :created
+    attr_reader :key_id, :algorithm, :covered_content, :base64_value, :expires, :created
 
-    def initialize(key_id:, algorithm:, covered_content:, signature_base64:, created: nil, expires: nil)
+    def initialize(key_id:, algorithm:, covered_content:, base64_value:, created: nil, expires: nil)
       @key_id = key_id
-      @algorithm = algorithm
-      @covered_content = covered_content
-      @signature_base64 = signature_base64
+
+      @algorithm =
+        case algorithm
+        when Algorithm::Base
+          algorithm
+        when String
+          Algorithm.create(algorithm)
+        else
+          raise ArgumentError, "Invalid Algorithm: #{algorithm}"
+        end
+
+      @covered_content =
+        case covered_content
+        when CoveredContent
+          covered_content
+        when String
+          CoveredContent.from_string(covered_content)
+        else
+          raise ArgumentError, "Invalid CoveredContent: #{covered_content}"
+        end
+
+      @base64_value = base64_value
       @created = created
       @expires = expires
     end
 
-    def to_str
+    def to_s
       # TODO: Consider filter_map in Ruby 2.7
       to_h.each_with_object([]) { |(name, value), result|
         next if value.nil?
@@ -96,9 +115,9 @@ module HttpSignatures
     def to_h
       @_hash ||= {
         KEY_ID => key_id,
-        ALGORITHM => algorithm,
+        ALGORITHM => algorithm.name,
         HEADERS => covered_content,
-        SIGNATURE => signature_base64
+        SIGNATURE => base64_value
       }.tap do |hash|
         hash[CREATED] = created if created
         hash[EXPIRES] = expires if expires

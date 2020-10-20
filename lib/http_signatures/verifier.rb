@@ -2,15 +2,12 @@
 
 module HttpSignatures
   class Verifier
-    def initialize(key_store:)
-      @key_store = key_store
-    end
-
-    def valid?(message, **opts)
+    def valid?(key, signature, message, **kwargs)
       Verification.new(
+        key: key,
+        signature: signature,
         message: message,
-        key_store: @key_store,
-        **opts
+        **kwargs
       ).valid?
     end
   end

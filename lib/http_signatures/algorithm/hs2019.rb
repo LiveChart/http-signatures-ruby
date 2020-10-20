@@ -11,22 +11,18 @@ module HttpSignatures
         NAME
       end
 
-      def sign(key, data, salt_length: :max, hash: DIGEST)
-        key = key[:private_key]
-
+      def sign(key, data, salt_length: :max)
         raise ArgumentError, "Invalid key type: #{key.class}" unless key.is_a?(OpenSSL::PKey::RSA)
         raise ArgumentError, "Can't sign without the private key" unless key.private?
 
-        key.sign_pss(DIGEST, data, salt_length: salt_length, mgf1_hash: hash)
+        key.sign_pss(DIGEST, data, salt_length: salt_length, mgf1_hash: DIGEST)
       end
 
-      def verify(key, signed_data, data, salt_length: :auto, hash: DIGEST)
-        key = key[:public_key]
-
+      def verify(key, signed_data, data, salt_length: :auto)
         raise ArgumentError, "Invalid key type: #{key.class}" unless key.is_a?(OpenSSL::PKey::RSA)
         raise ArgumentError, "Can't verify without the public key" unless key.public?
 
-        key.verify_pss(DIGEST, signed_data, data, salt_length: salt_length, mgf1_hash: hash)
+        key.verify_pss(DIGEST, signed_data, data, salt_length: salt_length, mgf1_hash: DIGEST)
       end
     end
   end
