@@ -48,7 +48,7 @@ module HttpSignatures
 
       created = signature.created
 
-      if !created && message.header?(Header::DATE)
+      if !created && message.header?(Header::DATE) && signature.covered_content.include?(Header::DATE)
         created = Time.httpdate(message.header(Header::DATE)).to_i
       end
 

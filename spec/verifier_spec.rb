@@ -112,15 +112,40 @@ RSpec.describe HttpSignatures::Verifier do
     let(:max_age) { 300 }
 
     context "relative to the 'Date' header" do
-      it "verifies an unexpired message" do
-        Timecop.freeze(date + max_age) do
-          expect(verifier.valid?(key, signature_header, message, max_age: max_age)).to eq(false)
+      context "when the Date header is in the covered content" do
+        it "verifies an unexpired message" do
+          Timecop.freeze(date + max_age - 1) do
+            expect(verifier.valid?(key, signature_header, message, max_age: max_age)).to eq(true)
+          end
+        end
+
+        it "rejects an expired message" do
+          Timecop.freeze(date + max_age + 1) do
+            expect(verifier.valid?(key, signature_header, message, max_age: max_age)).to eq(false)
+          end
         end
       end
 
-      it "rejects an expired message" do
-        Timecop.freeze(date + max_age + 1) do
-          expect(verifier.valid?(key, signature_header, message, max_age: max_age)).to eq(false)
+      context "when the Date header is NOT in the covered content" do
+        let(:signature_header_string) do
+          'keyId="%s",algorithm="%s",headers="%s",signature="%s"' % [
+            "pda",
+            "hs2019",
+            "(request-target)",
+            "rtSJ1mvgnzxTz/7jCJgk8a63I0WebmyCDyR1sgM7qG24aLiScKU3qDdOh1LBDFDvbj8FiL7cidPR44dn7n7cgcM48+E7pjxpPJBoJ33i0kjkrBzbXqwYlI1voDZR9RHt0l+TZHYHPZCu4fmgIyUPKMDY/A+KZGf2RKaRXfGmKqY="
+          ]
+        end
+
+        it "ignores the Date header before max_age has been reached" do
+          Timecop.freeze(date + max_age - 1) do
+            expect(verifier.valid?(key, signature_header, message, max_age: max_age)).to eq(true)
+          end
+        end
+
+        it "ignores the Date header after max_age has been reached" do
+          Timecop.freeze(date + max_age + 1) do
+            expect(verifier.valid?(key, signature_header, message, max_age: max_age)).to eq(true)
+          end
         end
       end
     end
