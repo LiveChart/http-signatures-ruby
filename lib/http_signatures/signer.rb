@@ -12,7 +12,6 @@ module HttpSignatures
     def signature_header(message, created: nil, expires: nil)
       SignatureHeader.new(
         key_id: @key.id,
-        algorithm: @key.algorithm.name,
         covered_content: @covered_content,
         base64_value: base64_signature(message, @covered_content, created: created, expires: expires),
         created: created,

@@ -15,6 +15,8 @@ module HttpSignatures
 
     class EmptyCoveredContent < HttpSignatures::Error; end
 
+    SEPARATOR = " "
+
     REQUEST_TARGET = "(request-target)"
 
     # Are these useful and will they continue to be in the spec?
@@ -25,7 +27,7 @@ module HttpSignatures
     ILLEGAL = ["signature"]
 
     def self.from_string(string)
-      new(string.split(" "))
+      new(string.split(SEPARATOR))
     end
 
     def initialize(names)
@@ -38,7 +40,7 @@ module HttpSignatures
     end
 
     def to_s
-      @_string ||= @names.join(" ")
+      @_string ||= @names.join(SEPARATOR)
     end
 
     def include?(value)
@@ -46,6 +48,7 @@ module HttpSignatures
     end
 
     def_delegator :@names, :map
+    def_delegator :@names, :count
 
     private
 
