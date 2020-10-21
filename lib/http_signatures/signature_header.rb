@@ -126,7 +126,7 @@ module HttpSignatures
 
     def to_s
       # TODO: Consider filter_map in Ruby 2.7
-      to_h.each_with_object([]) { |(name, value), result|
+      @_string ||= to_h.each_with_object([]) { |(name, value), result|
         next if value.nil?
 
         case value

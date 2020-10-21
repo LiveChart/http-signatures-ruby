@@ -12,7 +12,9 @@ module HttpSignatures
     end
 
     def to_s
-      covered_content.map { |name| "%s: %s" % [name, covered_content_value(name)] }.join("\n")
+      @_string ||= covered_content.map { |name|
+        "%s: %s" % [name, covered_content_value(name)]
+      }.join("\n")
     end
 
     private
