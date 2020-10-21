@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "active_support/security_utils"
+
 module HttpSignatures
   module Algorithm
     class HMAC < Base
@@ -11,7 +13,10 @@ module HttpSignatures
       end
 
       def verify(private_key, signed_data, data)
-        signed_data == sign(private_key, data)
+        ActiveSupport::SecurityUtils.fixed_length_secure_compare(
+          signed_data,
+          sign(private_key, data)
+        )
       end
     end
   end
