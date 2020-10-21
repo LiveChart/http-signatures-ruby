@@ -108,9 +108,28 @@ RSpec.describe HttpSignatures::Verifier do
         expect(verifier.valid?(key, signature_header, message)).to eq(false)
       end
     end
+
+    context "when (expires) is NOT in the covered content" do
+      let(:signature_header_string) do
+        'keyId="%s",algorithm="%s",headers="%s",signature="%s",expires=%s' % [
+          "pda",
+          "hs2019",
+          "(request-target)",
+          "BaYi0egx03hi9lE3O43ImTRZInsz2sda7xZn4j0lk09tSvslT5ovFO9FKQIBbKyrljp9HhDWboCw+qou/20QmHzbQL1q8Pa6ZkjMshJcq2GDVLhlLRTkTqi2qtEGDaxEA50s2wGqReutRqQ5ZlsKZUARD7TND97US0tN62X7SaQ=",
+          expires
+        ]
+      end
+
+      it "does not reject message that would have been expired" do
+        # puts HttpSignatures::Signer.new(private_key, HttpSignatures::CoveredContent.from_string("(request-target)")).signature_header(HttpSignatures::Message.from(Net::HTTP::Get.new("/path?query=123")))
+        Timecop.freeze(expires_at + 1) do
+          expect(verifier.valid?(key, signature_header, message)).to eq(true)
+        end
+      end
+    end
   end
 
-  context "with a max_age" do
+  context "provided a max_age" do
     let(:max_age) { 300 }
 
     context "relative to the 'Date' header" do
@@ -130,7 +149,6 @@ RSpec.describe HttpSignatures::Verifier do
 
       context "when the Date header is NOT in the covered content" do
         let(:signature_header_string) do
-          # puts HttpSignatures::Signer.new(private_key, HttpSignatures::Algorithm::Hs2019.new, HttpSignatures::CoveredContent.from_string("(request-target)")).signature_header(HttpSignatures::Message.from(Net::HTTP::Get.new("/path?query=123")))
           'keyId="%s",algorithm="%s",headers="%s",signature="%s"' % [
             "pda",
             "hs2019",
@@ -139,15 +157,21 @@ RSpec.describe HttpSignatures::Verifier do
           ]
         end
 
-        it "ignores the Date header before max_age has been reached" do
+        # it "raises UnknownCreationTimeError even before the max_age has been reached" do
+        it "rejects the message even before the max_age has been reached" do
           Timecop.freeze(date + max_age - 1) do
-            expect(verifier.valid?(key, signature_header, message, max_age: max_age)).to eq(true)
+            expect(verifier.valid?(key, signature_header, message, max_age: max_age)).to eq(false)
+            # expect { verifier.valid?(key, signature_header, message, max_age: max_age) }.
+            #   to raise_error(HttpSignatures::Verification::UnknownCreationTimeError)
           end
         end
 
-        it "ignores the Date header after max_age has been reached" do
+        # it "raises UnknownCreationTimeError after max_age has been reached" do
+        it "rejects the message after max_age has been reached" do
           Timecop.freeze(date + max_age + 1) do
-            expect(verifier.valid?(key, signature_header, message, max_age: max_age)).to eq(true)
+            expect(verifier.valid?(key, signature_header, message, max_age: max_age)).to eq(false)
+            # expect { verifier.valid?(key, signature_header, message, max_age: max_age) }.
+            #   to raise_error(HttpSignatures::Verification::UnknownCreationTimeError)
           end
         end
       end

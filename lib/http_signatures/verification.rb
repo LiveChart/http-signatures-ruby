@@ -4,6 +4,8 @@ require "base64"
 
 module HttpSignatures
   class Verification
+    class UnknownCreationTimeError < HttpSignatures::Error; end
+
     attr_reader :key, :signature, :message, :max_age
 
     def initialize(key:, signature:, message:, max_age: nil)
@@ -14,16 +16,8 @@ module HttpSignatures
     end
 
     def valid?
-      decoded_signature = Base64.strict_decode64(signature.base64_value) rescue nil
-
-      return false if decoded_signature.nil?
-
-      signature && !expired? && key.algorithm.verify(
-        key.secret,
-        decoded_signature,
-        signature_input.to_s
-      )
-    rescue SignatureHeader::ParseError, Message::MissingHeaderError
+      valid_signature? && !expired?
+    rescue SignatureHeader::ParseError, Message::MissingHeaderError, UnknownCreationTimeError
       false
     end
 
@@ -38,23 +32,34 @@ module HttpSignatures
       )
     end
 
-    def expired?
-      now = Time.now.to_i
-      expires = signature.expires
+    def valid_signature?
+      decoded_signature = Base64.strict_decode64(signature.base64_value) rescue nil
 
-      return true if expires && expires < now
+      return false if decoded_signature.nil?
+
+      signature && key.algorithm.verify(key.secret, decoded_signature, signature_input.to_s)
+    end
+
+    def expired?
+      expires_at = if signature.expires && signature.covers?(CoveredContent::EXPIRES)
+        expires_at = signature.expires
+      end
+
+      if max_age
+        expires_at ||= if signature.created && signature.covers?(CoveredContent::CREATED)
+          signature.created + max_age
+        end
+
+        expires_at ||= if message.header?(Header::DATE) && signature.covers?(Header::DATE)
+          Time.httpdate(message.header(Header::DATE)).to_i + max_age
+        end
+      end
+
+      return expires_at <= Time.now.to_i if expires_at
 
       return false if max_age.nil?
 
-      created = signature.created
-
-      if !created && message.header?(Header::DATE) && signature.covered_content.include?(Header::DATE)
-        created = Time.httpdate(message.header(Header::DATE)).to_i
-      end
-
-      return true if created && created + max_age <= now
-
-      false
+      raise UnknownCreationTimeError
     end
   end
 end
