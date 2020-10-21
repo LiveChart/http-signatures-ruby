@@ -150,6 +150,10 @@ module HttpSignatures
       end
     end
 
+    def covers?(name)
+      covered_content.include?(name)
+    end
+
     private
 
     def assert_valid_values!

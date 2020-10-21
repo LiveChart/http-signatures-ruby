@@ -214,4 +214,16 @@ RSpec.describe HttpSignatures::SignatureHeader do
       end
     end
   end
+
+  describe "#covers?" do
+    let(:covered_content) { "date" }
+
+    it "correctly validates a covered value" do
+      expect(signature_header.covers?("dAtE")).to eq(true)
+    end
+
+    it "correctly checks presence" do
+      expect(signature_header.covers?("digest")).to eq(false)
+    end
+  end
 end
