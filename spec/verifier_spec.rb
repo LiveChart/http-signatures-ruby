@@ -13,11 +13,13 @@ RSpec.describe HttpSignatures::Verifier do
   let(:created) { nil }
   let(:expires) { nil }
 
-  let(:public_key_value) { OpenSSL::PKey::RSA.new(File.read(File.join(__dir__, "keys", "id_rsa.pub"))) }
-  let(:private_key_value) { OpenSSL::PKey::RSA.new(File.read(File.join(__dir__, "keys", "id_rsa"))) }
+  let(:public_key_material) { OpenSSL::PKey::RSA.new(File.read(File.join(RSPEC_ROOT, "keys", "id_rsa.pub"))) }
+  let(:private_key_material) { OpenSSL::PKey::RSA.new(File.read(File.join(RSPEC_ROOT, "keys", "id_rsa"))) }
 
-  let(:public_key) { HttpSignatures::Key.new(id: "pda", secret: public_key_value) }
-  let(:private_key) { HttpSignatures::Key.new(id: "pda", secret: private_key_value) }
+  let(:algorithm) { HttpSignatures::Algorithm::RsaSsaPss.new }
+
+  let(:public_key) { HttpSignatures::Key.new(id: "pda", secret: public_key_material, algorithm: algorithm) }
+  let(:private_key) { HttpSignatures::Key.new(id: "pda", secret: private_key_material, algorithm: algorithm) }
 
   let(:key) { public_key }
 
@@ -128,6 +130,7 @@ RSpec.describe HttpSignatures::Verifier do
 
       context "when the Date header is NOT in the covered content" do
         let(:signature_header_string) do
+          # puts HttpSignatures::Signer.new(private_key, HttpSignatures::Algorithm::Hs2019.new, HttpSignatures::CoveredContent.from_string("(request-target)")).signature_header(HttpSignatures::Message.from(Net::HTTP::Get.new("/path?query=123")))
           'keyId="%s",algorithm="%s",headers="%s",signature="%s"' % [
             "pda",
             "hs2019",

@@ -8,11 +8,6 @@ module HttpSignatures
       end
     end
 
-    def self.create(name)
-      case name
-        when Hs2019::NAME then Hs2019.new
-        else raise UnknownAlgorithm.new(name)
-      end
-    end
+    HS2019 = "hs2019"
   end
 end

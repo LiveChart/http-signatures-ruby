@@ -45,7 +45,7 @@ RSpec.describe HttpSignatures::SignatureHeader do
     end
 
     it "returns the correct values" do
-      expect(parsed.algorithm).to be_a(HttpSignatures::Algorithm::Hs2019)
+      expect(parsed.algorithm).to eq("hs2019")
       expect(parsed.covered_content.to_a).to eq(["(request-target)", "date"])
       expect(parsed).to have_attributes(
         {

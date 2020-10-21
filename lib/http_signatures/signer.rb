@@ -4,16 +4,15 @@ require "base64"
 
 module HttpSignatures
   class Signer
-    def initialize(key, algorithm, covered_content)
+    def initialize(key, covered_content)
       @key = key
-      @algorithm = algorithm
       @covered_content = covered_content
     end
 
     def signature_header(message, created: nil, expires: nil)
       SignatureHeader.new(
         key_id: @key.id,
-        algorithm: @algorithm.name,
+        algorithm: @key.algorithm.name,
         covered_content: @covered_content,
         base64_value: base64_signature(message, @covered_content, created: created, expires: expires),
         created: created,
@@ -42,7 +41,7 @@ module HttpSignatures
     private
 
     def base64_signature(*args)
-      digest = @algorithm.sign(@key.secret, signature_input(*args).to_s)
+      digest = @key.algorithm.sign(@key.secret, signature_input(*args).to_s)
 
       ::Base64.strict_encode64(digest)
     end

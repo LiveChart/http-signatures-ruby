@@ -18,7 +18,7 @@ module HttpSignatures
 
       return false if decoded_signature.nil?
 
-      signature && !expired? && signature.algorithm.verify(
+      signature && !expired? && key.algorithm.verify(
         key.secret,
         decoded_signature,
         signature_input.to_s

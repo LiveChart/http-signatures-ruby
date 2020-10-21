@@ -72,16 +72,7 @@ module HttpSignatures
 
     def initialize(key_id:, algorithm:, covered_content:, base64_value:, created: nil, expires: nil)
       @key_id = key_id
-
-      @algorithm =
-        case algorithm
-        when Algorithm::Base
-          algorithm
-        when String
-          Algorithm.create(algorithm)
-        else
-          raise ArgumentError, "Invalid Algorithm: #{algorithm}"
-        end
+      @algorithm = algorithm
 
       @covered_content =
         case covered_content
@@ -115,7 +106,7 @@ module HttpSignatures
     def to_h
       @_hash ||= {
         KEY_ID => key_id,
-        ALGORITHM => algorithm.name,
+        ALGORITHM => Algorithm::HS2019,
         HEADERS => covered_content,
         SIGNATURE => base64_value
       }.tap do |hash|

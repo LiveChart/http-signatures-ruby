@@ -5,16 +5,16 @@ require "net/http"
 RSpec.describe HttpSignatures::Signer do
   EXAMPLE_DATE = "Mon, 28 Jul 2014 15:39:13 -0700"
 
-  let(:private_key_value) { OpenSSL::PKey::RSA.new(File.read(File.join(__dir__, "keys", "id_rsa"))) }
+  let(:private_key_value) { OpenSSL::PKey::RSA.new(File.read(File.join(RSPEC_ROOT, "keys", "id_rsa"))) }
 
-  let(:private_key) { HttpSignatures::Key.new(id: "pda", secret: private_key_value) }
+  let(:private_key) { HttpSignatures::Key.new(id: "pda", secret: private_key_value, algorithm: algorithm) }
 
   let(:key) { private_key }
 
   subject(:signer) do
-    described_class.new(key, algorithm, covered_content)
+    described_class.new(key, covered_content)
   end
-  let(:algorithm) { HttpSignatures::Algorithm::Hs2019.new }
+  let(:algorithm) { HttpSignatures::Algorithm::RsaSsaPss.new }
   let(:covered_content) { HttpSignatures::CoveredContent.new(["date", "content-type"]) }
 
   let(:http_message) do
