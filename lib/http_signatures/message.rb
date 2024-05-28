@@ -57,6 +57,12 @@ module HttpSignatures
             headers: raw.headers,
             verb: raw.method
           )
+        when defined?(Faraday) && Faraday::Request
+          new(
+            path: raw.path,
+            headers: raw.headers,
+            verb: raw.http_method
+          )
         else
           raise ArgumentError, "Cannot create a signature message from a #{raw.class}"
         end
