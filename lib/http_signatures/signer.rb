@@ -39,8 +39,8 @@ module HttpSignatures
 
     private
 
-    def base64_signature(*args)
-      digest = @key.algorithm.sign(@key.secret, signature_input(*args).to_s)
+    def base64_signature(*args, **kwargs)
+      digest = @key.algorithm.sign(@key.secret, signature_input(*args, **kwargs).to_s)
 
       ::Base64.strict_encode64(digest)
     end
