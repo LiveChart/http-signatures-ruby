@@ -28,6 +28,8 @@ module HttpSignatures
           request
         when defined?(ActionDispatch) && ActionDispatch::Request
           request.headers
+        when defined?(Faraday) && Faraday::Request
+          request.headers
         else
           raise ArgumentError, "Cannot sign #{raw.class}"
         end
